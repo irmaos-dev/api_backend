@@ -1,51 +1,25 @@
 const request = require("supertest");
 const connection = "http://localhost:3000";
-
-// vc deve imaginar que o ambiente que um teste automatizado está sendo executado
-// é um ambiente sem dados, novo
+let idTeste = 0;
+let dadoNome = "";
+let dadoEmail = "";
+let dadoTipo = 0;
 
 describe("GET /pessoa", () => {
-  // o teste tá começando agora, esse endpoint deveria retornar um body com um []
-  it("Deve retornar 200", () => {
+  it("Deve retornar 200 e o body vazio", () => {
     return request(connection)
       .get("/pessoa")
       .expect(200)
       .then((response) => {
-        expect(response.body);
-        console.log(response.body);
+        expect(response.body).toHaveLength(0);
       });
-  });
-
-  it("Deve retornar 404", async () => {
-    return await request(connection)
-    .get("/pessoa_teste")
-    .expect((response) =>{
-      console.log(response)
-    })
-    .expect(404);
   });
 });
 
-// describe("GET /pessoa/:id", () => {
-//   it("Deve retornar 200 e verificar o nome", () => {
-//     return request(connection)
-//       .get("/pessoa/14")
-//       .expect(200)
-//       .then((response) => {
-//         expect(response.body.nome).toEqual("Gustavo");
-//       });
-//   });
-
-//   it("Deve retornar 404", async () => {
-//     return await request(connection).get("/pessoa/70").expect(404);
-//   });
-// });
-
 describe("POST /pessoa", () => {
-  const dadoNome = "Edu";
-  const dadoEmail = "Edu@talk.com";
-  const dadoTipo = 2;
-  let idNovo = 0;
+  dadoNome = "Teste";
+  dadoEmail = "teste@teste.com";
+  dadoTipo = 1;
 
   it("Deve retornar 201", () => {
     return request(connection)
@@ -55,21 +29,17 @@ describe("POST /pessoa", () => {
       .expect("Content-Type", /json/)
       .expect(201)
       .then((response) => {
-        idNovo = response.body.insertId;
-        console.log(idNovo);
-        if (idNovo == 0) {
-          // expect(idNovo).not.toBe(0)
-          throw new Error("Erro ao adicionar!");
-        }
+        idTeste = response.body.insertId;
+        expect(idTeste).not.toBe(0);
       });
   });
 
   it("Deve verificar se os dados enviados foram incluídos no banco de dados", () => {
     return request(connection)
-      .get("/pessoa/" + idNovo)
+      .get("/pessoa/" + idTeste)
       .expect(200)
       .then((response) => {
-        // expect id toequal idnovo
+        expect(response.body.id).toEqual(idTeste);
         expect(response.body.nome).toEqual(dadoNome);
         expect(response.body.email).toEqual(dadoEmail);
         expect(response.body.tipo).toEqual(dadoTipo);
@@ -78,24 +48,23 @@ describe("POST /pessoa", () => {
 });
 
 describe("PUT /pessoa/:dados", () => {
-  const dadoNome = "Boy";
-  const dadoEmail = "boy@the.cat";
-  const dadoTipo = 3;
-  // tem que ser deterministico, usar a pessoa criada pelo POST
-  const id = "8";
+  dadoNome = "Teste2";
+  dadoEmail = "teste2@teste2.com";
+  dadoTipo = 2;
 
-  it("Deve retornar 204", () => {
+  it("Deve retornar 200", () => {
     return request(connection)
-      .put("/pessoa/" + id)
+      .put("/pessoa/" + idTeste)
       .send({ nome: dadoNome, email: dadoEmail, tipo: dadoTipo })
       .expect(200);
   });
 
   it("Deve verificar se os dados enviados foram alterados no banco de dados", () => {
     return request(connection)
-      .get("/pessoa/" + id)
+      .get("/pessoa/" + idTeste)
       .expect(200)
       .then((response) => {
+        expect(response.body.id).toEqual(idTeste);
         expect(response.body.nome).toEqual(dadoNome);
         expect(response.body.email).toEqual(dadoEmail);
         expect(response.body.tipo).toEqual(dadoTipo);
@@ -104,20 +73,29 @@ describe("PUT /pessoa/:dados", () => {
 });
 
 describe("DELETE /pessoa/:id", () => {
-  // precisa usar o ID do POST
-  const id = "9";
-
   it("Deve retornar 204", () => {
     return request(connection)
-      .delete("/pessoa/" + id)
+      .delete("/pessoa/" + idTeste)
       .expect(204);
   });
 
   it("Deve verificar se os dados enviados foram deletados no banco de dados", () => {
     return request(connection)
-      .get("/pessoa/" + id)
-      .expect(404);
+      .get("/pessoa/" + idTeste)
+      .expect(404)
+      .then((response) =>{       
+        expect(response.body).toStrictEqual({});
+      })
   });
 
-  // verificar se o GET /pessoa tá vazio também
+  describe("GET /pessoa", () => {
+    it("Deve retornar 200 e o body vazio", () => {
+      return request(connection)
+        .get("/pessoa")
+        .expect(200)
+        .then((response) => {
+          expect(response.body).toHaveLength(0);
+        });
+    });
+  });
 });

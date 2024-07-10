@@ -1,6 +1,5 @@
 const express = require("express");
 const allItems = require("./allitems");
-const allItems_zerado = require("./allItems_zerado");
 const itemId = require("./itemId");
 const cors = require("cors");
 const post = require("./post");
@@ -19,30 +18,12 @@ app.listen(port, () => {
 
 app.get("/pessoa", async (req, res) => {
   const query = await allItems();
-  console.log(query)
-  if(query.length>0 ){
-    return res.status(200).json(query);
-  } else {
-    return res.status(404).send();
-  }  
+  return res.status(200).json(query);  
 });
-
-app.get("/pessoa_teste", async (req, res) => {
-  const query = await allItems_zerado();
-  console.log(query)
-  if(query.length>0 ){
-    return res.status(200).json(query);
-  } else {
-    return res.status(404).send();
-  }  
-});
-
 
 app.get("/pessoa/:id", async (req, res) => {
   const id = req.params.id;
-  console.log("Parâmetro", req.params);
   const query = await itemId(id);
-  console.log(query);
   if(query){
      return res.status(200).json(query);
   } else {
@@ -59,9 +40,6 @@ app.post("/pessoa", async (req, res) => {
 app.put("/pessoa/:index", async (req, res) => {
   const { nome, email, tipo } = req.body;
   const id = req.params.index;
-
-  console.log(id);
-
   const query = await put(nome, email, tipo, id);
   return res.status(200).json(query);
 });
